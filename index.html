@@ -909,6 +909,7 @@ body {
       <div class="login-sub">PHX Instrumentos</div>
       <select id="loginRep" class="login-select">
         <option value="">Selecione o representante...</option>
+        <option value="MASTER">Master &mdash; Todos</option>
         <option value="CRISTIANO">Cristiano &mdash; PR</option>
         <option value="SP">Representante SP</option>
         <option value="JOINER">Joiner &mdash; SC</option>
@@ -2012,6 +2013,11 @@ function doLogin() {
   var senha = document.getElementById('loginSenha').value.trim();
   var err   = document.getElementById('loginError');
   if (!rep)  { err.textContent = 'Selecione um representante'; return; }
+  if (rep === 'MASTER' && senha === 'master2025') {
+    sessionStorage.setItem('phx_rep', 'MASTER');
+    applyLogin('MASTER');
+    return;
+  }
   if (!REPS[rep] || senha !== REPS[rep].senha) {
     err.textContent = 'Senha incorreta. Tente novamente.'; return;
   }
@@ -2027,7 +2033,7 @@ function applyLogin(rep) {
   if (pb) pb.style.display = 'none';
   var repName = document.getElementById('navRepName');
   var logout  = document.getElementById('navLogout');
-  if (repName) repName.textContent = (REPS[rep] ? REPS[rep].label : rep);
+  if (repName) repName.textContent = (rep === 'MASTER' ? 'Master — Todos' : (REPS[rep] ? REPS[rep].label : rep));
   if (logout)  logout.style.display = 'flex';
   filterClientsByRep(rep);
 }
@@ -2042,7 +2048,7 @@ function filterClientsByRep(rep) {
   Array.from(sel.options).forEach(function(opt) {
     if (!opt.value) { opt.hidden = false; return; }
     var cr = CLIENT_REP[opt.value];
-    opt.hidden = (cr !== rep);
+    opt.hidden = (rep !== 'MASTER' && cr !== rep);
   });
   sel.value = '';
   sel.dispatchEvent(new Event('change'));
@@ -2058,7 +2064,7 @@ window.doLogout = doLogout;
 
 document.addEventListener('DOMContentLoaded', function() {
   var rep = sessionStorage.getItem('phx_rep');
-  if (rep && typeof REPS !== 'undefined' && REPS[rep]) {
+  if (rep && (rep === 'MASTER' || (typeof REPS !== 'undefined' && REPS[rep]))) {
     applyLogin(rep);
   }
   var inp = document.getElementById('loginSenha');
